@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Centipede Follower</title>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #000022, #000);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    const segments = 30;
+    const segLength = 15;
+    let target = { x: innerWidth / 2, y: innerHeight / 2 };
+
+    // Handle mouse move
+    document.addEventListener('mousemove', e => {
+      target.x = e.clientX;
+      target.y = e.clientY;
+    });
+
+    // Initialize bones
+    const bones = [];
+    for (let i = 0; i < segments; i++) {
+      bones.push({ x: target.x, y: target.y, angle: 0 });
+    }
+
+    function drawBone(x, y, angle) {
+      const legLength = 10;
+      const legAngle = Math.PI / 3;
+
+      // Main spine
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      const x2 = x + Math.cos(angle) * segLength;
+      const y2 = y + Math.sin(angle) * segLength;
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Legs
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(angle + legAngle) * legLength, y + Math.sin(angle + legAngle) * legLength);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(angle - legAngle) * legLength, y + Math.sin(angle - legAngle) * legLength);
+      ctx.strokeStyle = "#44ffcc";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      return { x: x2, y: y2 };
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Head follows mouse
+      bones[0].x += (target.x - bones[0].x) * 0.2;
+      bones[0].y += (target.y - bones[0].y) * 0.2;
+
+      // Follow chain
+      for (let i = 1; i < bones.length; i++) {
+        const dx = bones[i - 1].x - bones[i].x;
+        const dy = bones[i - 1].y - bones[i].y;
+        const angle = Math.atan2(dy, dx);
+        bones[i].x = bones[i - 1].x - Math.cos(angle) * segLength;
+        bones[i].y = bones[i - 1].y - Math.sin(angle) * segLength;
+        bones[i].angle = angle;
+      }
+
+      // Draw all
+      for (let i = 0; i < bones.length; i++) {
+        const b = bones[i];
+        drawBone(b.x, b.y, b.angle);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
